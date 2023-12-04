@@ -10,7 +10,7 @@ public class FileExchangeClient {
     public static void main(String[] args) {
         try {
             Scanner scanner = new Scanner(System.in);
-            System.out.print("Enter server IP address and port (e.g., /join 127.0.0.1 8080): ");
+            System.out.print("Enter server IP address and port (e.g., /join 127.0.0.1 12345): ");
             String joinCommand = scanner.nextLine();
 
             String[] joinTokens = joinCommand.split("\\s+");

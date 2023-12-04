@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileExchangeServer {
-    private static final int PORT = 8080; // Server port
+    private static final int PORT = 12345; // Server port
     private static final int BUFFER_SIZE = 1024;
     private static Set<String> registeredHandles = new HashSet<>();
 

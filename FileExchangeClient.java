@@ -9,7 +9,7 @@ public class FileExchangeClient {
 
     public static void main(String[] args) {
         try {
-            Scanner scanner = new Scanner(System.in);
+            Scanner scanner = new Scanner(System.in); // test raico
             System.out.print("Enter server IP address and port (e.g., /join 127.0.0.1 8080): "); //test
             String joinCommand = scanner.nextLine();
 

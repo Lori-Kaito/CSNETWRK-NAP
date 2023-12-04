@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,6 +24,10 @@ public class FileExchangeServer {
 
                 String command;
                 while ((command = reader.readLine()) != null) {
+                    if (command.toLowerCase().startsWith("/store")) {
+                        receiveFile(clientSocket, command);
+                    }
+
                     String response = processCommand(command);
                     writer.println(response);
 
@@ -74,22 +79,49 @@ public class FileExchangeServer {
                 return "Connection closed. Thank you!";
 
             case "/register":
-                if (tokens.length == 2) {
-                    String handle = tokens[1];
-                    if (!registeredHandles.contains(handle)) {
-                        registeredHandles.add(handle);
-                        return "Welcome " + handle + "!";
-                    } else {
-                        return "Error: Handle or alias already exists.";
-                    }
+            if (tokens.length == 2) {
+                String handle = tokens[1];
+                if (!registeredHandles.contains(handle)) {
+                    registeredHandles.add(handle);
+                    return "Welcome " + handle + "!";
                 } else {
-                    return "Error: Invalid parameters for /register command.";
+                    return "Error: Handle or alias already exists.";
                 }
+            } else {
+                return "Error: Invalid parameters for /register command.";
+            }
 
             // Add logic for other commands (/store, etc.) here
 
             default:
                 return "Error: Command not found.";
+        }
+    }
+
+    private static void receiveFile(Socket socket, String command) throws IOException {
+        String[] storeTokens = command.split("\\s+");
+        if (storeTokens.length == 2) {
+            String fileName = storeTokens[1];
+            try (BufferedInputStream fileInputStream = new BufferedInputStream(socket.getInputStream());
+                 FileOutputStream fileOutputStream = new FileOutputStream("server_directory/" + fileName)) {
+
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int bytesRead;
+
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    fileOutputStream.write(buffer, 0, bytesRead);
+                }
+
+                // Get the current timestamp
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String timestamp = dateFormat.format(new Date());
+
+                // Extract user handle from the /register command
+                String userHandle = "User1"; // Update this with the actual user handle
+                System.out.println(userHandle + "<" + timestamp + ">: File received from client: " + fileName);
+            }
+        } else {
+            System.out.println("Error: Invalid parameters for /store command.");
         }
     }
 }

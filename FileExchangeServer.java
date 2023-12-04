@@ -62,8 +62,8 @@ public class FileExchangeServer {
                 return fileList.toString();
 
             case "/get":
-                // Logic to fetch a file from the server
-                if (tokens.length == 2) {
+                 // Logic to fetch a file from the server
+                 if (tokens.length == 2) {
                     String fileName = tokens[1];
                     File requestedFile = new File("server_directory", fileName);
                     if (requestedFile.exists()) {
@@ -79,15 +79,15 @@ public class FileExchangeServer {
                 return "Connection closed. Thank you!";
 
             case "/register":
-            if (tokens.length == 2) {
+                if (tokens.length == 2) {
                 String handle = tokens[1];
-                if (!registeredHandles.contains(handle)) {
+                    if (!registeredHandles.contains(handle)) {
                     registeredHandles.add(handle);
                     return "Welcome " + handle + "!";
-                } else {
+                }   else {
                     return "Error: Handle or alias already exists.";
                 }
-            } else {
+            }   else {
                 return "Error: Invalid parameters for /register command.";
             }
 

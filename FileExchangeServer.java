@@ -16,31 +16,37 @@ public class FileExchangeServer {
             System.out.println("Server is running on port " + PORT);
 
             while (true) {
-                Socket clientSocket = serverSocket.accept(); //accepts the client who will connect
-                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress()); //prints the client who got connected
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-
-                String command;
-                while ((command = reader.readLine()) != null) {
-                    if (command.toLowerCase().startsWith("/store")) { //if client wants to store a file in the server
-                        receiveFile(clientSocket, command);
-                    }
-
-                    String response = processCommand(command);
-                    writer.println(response);
-
-                    if (command.equalsIgnoreCase("/leave")) { //if client chose to disconnect from the server
-                        System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
-                        break;
-                    }
-                }
-
-                clientSocket.close();
+                // Handle each client in a separate thread
+                Thread clientThread = new Thread(() -> handleClient(clientSocket));
+                clientThread.start();
             }
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage()); //error if invalid command
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void handleClient(Socket clientSocket) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String command;
+            while ((command = reader.readLine()) != null) {
+                String response = processCommand(command);
+                writer.println(response);
+
+                if (command.equalsIgnoreCase("/leave")) {
+                    System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+                    break;
+                }
+            }
+
+            clientSocket.close();
+        } catch (IOException e) {
+            System.err.println("Error handling client: " + e.getMessage());
         }
     }
 
@@ -77,20 +83,22 @@ public class FileExchangeServer {
     
             case "/leave":
                 return "Connection closed. Thank you!"; //if client wants to leave in the server
-    
-            case "/register":
+
+            case "/register": //command to register handle or alias from the client
                 if (tokens.length == 2) {
-                    String handle = tokens[1];
+                String handle = tokens[1];
                     if (!registeredHandles.contains(handle)) {
-                        registeredHandles.add(handle);
-                        return "Welcome " + handle + "!";
-                    } else {
-                        return "Error: Handle or alias already exists.";
-                    }
-                } else {
-                    return "Error: Invalid parameters for /register command.";
+                    registeredHandles.add(handle);
+                    return "Welcome " + handle + "!";
+                }   else {
+                    return "Error: Handle or alias already exists.";
                 }
-    
+            }   else {
+                return "Error: Invalid parameters for /register command.";
+            }
+
+            // Add logic for other commands (/store, etc.) here
+
             default:
                 return "Error: Command not found.";
         }
@@ -99,7 +107,21 @@ public class FileExchangeServer {
     
 
 
-    private static void receiveFile(Socket socket, String command) throws IOException { //class from the server to know if file is received
+    private static String registerHandle(String[] tokens) {
+        if (tokens.length == 2) {
+            String handle = tokens[1];
+            if (!registeredHandles.contains(handle)) {
+                registeredHandles.add(handle);
+                return "Welcome " + handle + "!";
+            } else {
+                return "Error: Handle or alias already exists.";
+            }
+        } else {
+            return "Error: Invalid parameters for /register command.";
+        }
+    }
+
+    private static void receiveFile(Socket socket, String command) throws IOException {
         String[] storeTokens = command.split("\\s+");
         if (storeTokens.length == 2) {
             String fileName = storeTokens[1];

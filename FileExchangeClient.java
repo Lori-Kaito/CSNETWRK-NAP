@@ -21,7 +21,8 @@ public class FileExchangeClient {
                 Socket socket = new Socket(serverIP, serverPort);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-
+                
+                command:
                 while (true) {
                     System.out.print("Enter command: "); //enters what command
                     String command = scanner.nextLine();
@@ -34,6 +35,7 @@ public class FileExchangeClient {
                             sendFile(socket, filePath);
                         } else {
                             System.out.println("Error: Invalid parameters for /store command.");
+                            break command;
                         }
                     }
 
@@ -54,24 +56,30 @@ public class FileExchangeClient {
         }
     }
 
-    private static void sendFile(Socket socket, String filePath) throws IOException { //for user input when sending file in to the server or using /store
-        try (BufferedOutputStream fileOutputStream = new BufferedOutputStream(socket.getOutputStream());
-             FileInputStream fileInputStream = new FileInputStream(filePath)) {
-
+    private static void sendFile(Socket socket, String filePath) throws IOException {
+        BufferedOutputStream fileOutputStream = new BufferedOutputStream(socket.getOutputStream());
+        FileInputStream fileInputStream = new FileInputStream(filePath);
+    
+        try {
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
-
+    
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 fileOutputStream.write(buffer, 0, bytesRead);
             }
-
+    
             // Get the current timestamp
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String timestamp = dateFormat.format(new Date());
-
+    
             // Extract user handle from the /register command
             String userHandle = "User1"; // Update this with the actual user handle
             System.out.println(userHandle + "<" + timestamp + ">: Uploaded " + new File(filePath).getName());
+        } finally {
+            fileOutputStream.flush();
+            fileInputStream.close();
+            // You might not want to close the socket here if you're using it for other purposes
+            // socket.close();
         }
     }
 }

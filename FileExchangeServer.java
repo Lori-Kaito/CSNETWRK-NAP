@@ -7,12 +7,12 @@ import java.util.Set;
 
 public class FileExchangeServer {
     private static final int PORT = 12345; // the server port
-    private static final int BUFFER_SIZE = 1024; //buffer size
+    private static final int BUFFER_SIZE = 1024; // buffer size
     private static Set<String> registeredHandles = new HashSet<>();
 
     public static void main(String[] args) {
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT); //port of the server
+            ServerSocket serverSocket = new ServerSocket(PORT); // port of the server
             System.out.println("Server is running on port " + PORT);
 
             while (true) {
@@ -32,25 +32,36 @@ public class FileExchangeServer {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-
+    
             String command;
             while ((command = reader.readLine()) != null) {
-                String response = processCommand(command);
+                if (clientSocket.isClosed()) {
+                    // Check if the socket is closed
+                    System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+                    break;
+                }
+                
+                String response = processCommand(command, clientSocket);
+                if (response == null) {
+                    // If response is null, the socket might have been closed
+                    System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+                    break;
+                }
                 writer.println(response);
-
+    
                 if (command.equalsIgnoreCase("/leave")) {
                     System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
                     break;
                 }
             }
-
+    
             clientSocket.close();
         } catch (IOException e) {
             System.err.println("Error handling client: " + e.getMessage());
         }
     }
 
-    private static String processCommand(String command) {
+    private static String processCommand(String command, Socket clientSocket) {
         String[] tokens = command.split("\\s+");
         String action = tokens[0].toLowerCase();
     
@@ -85,19 +96,17 @@ public class FileExchangeServer {
                 return "Connection closed. Thank you!"; //if client wants to leave in the server
 
             case "/register": //command to register handle or alias from the client
-                if (tokens.length == 2) {
-                String handle = tokens[1];
-                    if (!registeredHandles.contains(handle)) {
-                    registeredHandles.add(handle);
-                    return "Welcome " + handle + "!";
-                }   else {
-                    return "Error: Handle or alias already exists.";
-                }
-            }   else {
-                return "Error: Invalid parameters for /register command.";
-            }
+                return registerHandle(tokens);
 
             // Add logic for other commands (/store, etc.) here
+
+            case "/store":
+                try {
+                    receiveFile(clientSocket, command);
+                    return "File stored successfully."; // Send a success message
+                } catch (IOException e) {
+                    return "Error storing file: " + e.getMessage(); // Send an error message
+                }
 
             default:
                 return "Error: Command not found.";
@@ -127,24 +136,21 @@ public class FileExchangeServer {
             String fileName = storeTokens[1];
             try (BufferedInputStream fileInputStream = new BufferedInputStream(socket.getInputStream());
                  FileOutputStream fileOutputStream = new FileOutputStream("server_directory/" + fileName)) {
-
+    
                 byte[] buffer = new byte[BUFFER_SIZE];
                 int bytesRead;
-
+    
                 while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                     fileOutputStream.write(buffer, 0, bytesRead);
                 }
-
+    
                 // Get the current timestamp
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String timestamp = dateFormat.format(new Date());
-
-                // Extract user handle from the /register command
-                String userHandle = "User1"; // Update this with the actual user handle
-                System.out.println(userHandle + "<" + timestamp + ">: File received from client: " + fileName);
+    
             }
         } else {
-            System.out.println("Error: Invalid parameters for /store command.");
+            throw new IOException("Invalid parameters for /store command.");
         }
     }
 }

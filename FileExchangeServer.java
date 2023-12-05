@@ -6,13 +6,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileExchangeServer {
-    private static final int PORT = 12345; // Server port
-    private static final int BUFFER_SIZE = 1024;
+    private static final int PORT = 12345; // the server port
+    private static final int BUFFER_SIZE = 1024; //buffer size
     private static Set<String> registeredHandles = new HashSet<>();
 
     public static void main(String[] args) {
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+            ServerSocket serverSocket = new ServerSocket(PORT); //port of the server
             System.out.println("Server is running on port " + PORT);
 
             while (true) {
@@ -56,7 +56,7 @@ public class FileExchangeServer {
 
         switch (action) {
             case "/dir":
-                // Logic to list files in the server directory
+                // shows the files in the server directory
                 File serverDirectory = new File("server_directory");
                 File[] files = serverDirectory.listFiles();
                 StringBuilder fileList = new StringBuilder("Server Directory:\n");
@@ -68,7 +68,7 @@ public class FileExchangeServer {
                 return fileList.toString();
 
             case "/get":
-                 // Logic to fetch a file from the server
+                 // used to get the specific file that the user wants
                  if (tokens.length == 2) {
                     String fileName = tokens[1];
                     File requestedFile = new File("server_directory", fileName);

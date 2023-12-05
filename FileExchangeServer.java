@@ -6,17 +6,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileExchangeServer {
-    private static final int PORT = 12345; // Server port
-    private static final int BUFFER_SIZE = 1024;
+    private static final int PORT = 12345; // the server port
+    private static final int BUFFER_SIZE = 1024; //buffer size
     private static Set<String> registeredHandles = new HashSet<>();
 
     public static void main(String[] args) {
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+            ServerSocket serverSocket = new ServerSocket(PORT); //port of the server
             System.out.println("Server is running on port " + PORT);
 
             while (true) {
-                Socket clientSocket = serverSocket.accept();
+                Socket clientSocket = serverSocket.accept(); //accepts the client who will connect
                 System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));

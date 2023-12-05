@@ -5,16 +5,16 @@ import java.util.Date;
 import java.util.Scanner;
 
 public class FileExchangeClient {
-    private static final int BUFFER_SIZE = 1024;
+    private static final int BUFFER_SIZE = 1024; //buffer size
 
     public static void main(String[] args) {
         try {
             Scanner scanner = new Scanner(System.in);
-            System.out.print("Enter server IP address and port (e.g., /join 127.0.0.1 8080): ");
-            String joinCommand = scanner.nextLine();
+            System.out.print("Enter server IP address and port (e.g., /join 127.0.0.1 12345): "); 
+            String joinCommand = scanner.nextLine(); //user will input the server IP address and port
 
             String[] joinTokens = joinCommand.split("\\s+");
-            if (joinTokens.length == 3 && joinTokens[0].equalsIgnoreCase("/join")) {
+            if (joinTokens.length == 3 && joinTokens[0].equalsIgnoreCase("/join")) { //condition to check if valid in using /join
                 String serverIP = joinTokens[1];
                 int serverPort = Integer.parseInt(joinTokens[2]);
 
@@ -23,7 +23,7 @@ public class FileExchangeClient {
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
 
                 while (true) {
-                    System.out.print("Enter command: ");
+                    System.out.print("Enter command: "); //enters what command
                     String command = scanner.nextLine();
                     writer.println(command);
 
@@ -47,14 +47,14 @@ public class FileExchangeClient {
 
                 socket.close();
             } else {
-                System.out.println("Invalid join command. Please restart the client and provide a valid /join command.");
+                System.out.println("Invalid join command. Please restart the client and provide a valid /join command."); //disconnects the client
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
         }
     }
 
-    private static void sendFile(Socket socket, String filePath) throws IOException {
+    private static void sendFile(Socket socket, String filePath) throws IOException { //for user input when sending file in to the server or using /store
         try (BufferedOutputStream fileOutputStream = new BufferedOutputStream(socket.getOutputStream());
              FileInputStream fileInputStream = new FileInputStream(filePath)) {
 

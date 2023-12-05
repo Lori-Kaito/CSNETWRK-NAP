@@ -17,21 +17,21 @@ public class FileExchangeServer {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept(); //accepts the client who will connect
-                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
+                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress()); //prints the client who got connected
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
 
                 String command;
                 while ((command = reader.readLine()) != null) {
-                    if (command.toLowerCase().startsWith("/store")) {
+                    if (command.toLowerCase().startsWith("/store")) { //if client wants to store a file in the server
                         receiveFile(clientSocket, command);
                     }
 
                     String response = processCommand(command);
                     writer.println(response);
 
-                    if (command.equalsIgnoreCase("/leave")) {
+                    if (command.equalsIgnoreCase("/leave")) { //if client chose to disconnect from the server
                         System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
                         break;
                     }
@@ -40,7 +40,7 @@ public class FileExchangeServer {
                 clientSocket.close();
             }
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage()); //error if invalid command
         }
     }
 
@@ -50,7 +50,7 @@ public class FileExchangeServer {
 
         switch (action) {
             case "/dir":
-                // Logic to list files in the server directory
+                // shows the files in the server directory
                 File serverDirectory = new File("server_directory");
                 File[] files = serverDirectory.listFiles();
                 StringBuilder fileList = new StringBuilder("Server Directory:\n");
@@ -62,7 +62,7 @@ public class FileExchangeServer {
                 return fileList.toString();
 
             case "/get":
-                 // Logic to fetch a file from the server
+                 // used to get the specific file that the user wants
                  if (tokens.length == 2) {
                     String fileName = tokens[1];
                     File requestedFile = new File("server_directory", fileName);
@@ -76,9 +76,9 @@ public class FileExchangeServer {
                 }
 
             case "/leave":
-                return "Connection closed. Thank you!";
+                return "Connection closed. Thank you!"; //if client wants to leave in the server
 
-            case "/register":
+            case "/register": //command to register handle or alias from the client
                 if (tokens.length == 2) {
                 String handle = tokens[1];
                     if (!registeredHandles.contains(handle)) {
@@ -98,7 +98,7 @@ public class FileExchangeServer {
         }
     }
 
-    private static void receiveFile(Socket socket, String command) throws IOException {
+    private static void receiveFile(Socket socket, String command) throws IOException { //class from the server to know if file is received
         String[] storeTokens = command.split("\\s+");
         if (storeTokens.length == 2) {
             String fileName = storeTokens[1];

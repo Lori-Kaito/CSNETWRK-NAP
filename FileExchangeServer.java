@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileExchangeServer {
-    private static final int PORT = 8080; // Server port
+    private static final int PORT = 12345; // Server port
     private static final int BUFFER_SIZE = 1024;
     private static Set<String> registeredHandles = new HashSet<>();
 
@@ -23,14 +23,15 @@ public class FileExchangeServer {
 
                 String command;
                 while ((command = reader.readLine()) != null) {
-                    String response = processCommand(command);
+                    String response = processCommand(command, clientSocket);
                     writer.println(response);
-
+                
                     if (command.equalsIgnoreCase("/leave")) {
                         System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
                         break;
                     }
                 }
+                
 
                 clientSocket.close();
             }
@@ -39,7 +40,7 @@ public class FileExchangeServer {
         }
     }
 
-    private static String processCommand(String command) {
+    private static String processCommand(String command, Socket clientSocket) {
         String[] tokens = command.split("\\s+");
         String action = tokens[0].toLowerCase();
 
@@ -85,11 +86,30 @@ public class FileExchangeServer {
                 } else {
                     return "Error: Invalid parameters for /register command.";
                 }
-
-            // Add logic for other commands (/store, etc.) here
-
+                case "/store":
+                if (tokens.length == 2) {
+                    String fileName = tokens[1];
+                    try {
+                        FileOutputStream fileOutputStream = new FileOutputStream("server_directory/" + fileName);
+            
+                        byte[] buffer = new byte[BUFFER_SIZE];
+                        int bytesRead;
+            
+                        InputStream input = clientSocket.getInputStream();
+                        while ((bytesRead = input.read(buffer)) != -1) {
+                            fileOutputStream.write(buffer, 0, bytesRead);
+                        }
+            
+                        fileOutputStream.close();
+                        return "File '" + fileName + "' successfully stored on the server.";
+                    } catch (IOException e) {
+                        return "Error: " + e.getMessage();
+                    }
+                } else {
+                    return "Error: Invalid parameters for /store command.";
+                }
             default:
-                return "Error: Command not found.";
+                return "Error: Command not found";
         }
     }
 }

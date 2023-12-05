@@ -19,28 +19,34 @@ public class FileExchangeServer {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-
-                String command;
-                while ((command = reader.readLine()) != null) {
-                    if (command.toLowerCase().startsWith("/store")) {
-                        receiveFile(clientSocket, command);
-                    }
-
-                    String response = processCommand(command);
-                    writer.println(response);
-
-                    if (command.equalsIgnoreCase("/leave")) {
-                        System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
-                        break;
-                    }
-                }
-
-                clientSocket.close();
+                // Handle each client in a separate thread
+                Thread clientThread = new Thread(() -> handleClient(clientSocket));
+                clientThread.start();
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void handleClient(Socket clientSocket) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String command;
+            while ((command = reader.readLine()) != null) {
+                String response = processCommand(command);
+                writer.println(response);
+
+                if (command.equalsIgnoreCase("/leave")) {
+                    System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+                    break;
+                }
+            }
+
+            clientSocket.close();
+        } catch (IOException e) {
+            System.err.println("Error handling client: " + e.getMessage());
         }
     }
 
@@ -79,22 +85,26 @@ public class FileExchangeServer {
                 return "Connection closed. Thank you!";
 
             case "/register":
-                if (tokens.length == 2) {
-                String handle = tokens[1];
-                    if (!registeredHandles.contains(handle)) {
-                    registeredHandles.add(handle);
-                    return "Welcome " + handle + "!";
-                }   else {
-                    return "Error: Handle or alias already exists.";
-                }
-            }   else {
-                return "Error: Invalid parameters for /register command.";
-            }
+                return registerHandle(tokens);
 
             // Add logic for other commands (/store, etc.) here
 
             default:
                 return "Error: Command not found.";
+        }
+    }
+
+    private static String registerHandle(String[] tokens) {
+        if (tokens.length == 2) {
+            String handle = tokens[1];
+            if (!registeredHandles.contains(handle)) {
+                registeredHandles.add(handle);
+                return "Welcome " + handle + "!";
+            } else {
+                return "Error: Handle or alias already exists.";
+            }
+        } else {
+            return "Error: Invalid parameters for /register command.";
         }
     }
 

@@ -47,7 +47,7 @@ public class FileExchangeServer {
     private static String processCommand(String command) {
         String[] tokens = command.split("\\s+");
         String action = tokens[0].toLowerCase();
-
+    
         switch (action) {
             case "/dir":
                 // shows the files in the server directory
@@ -60,10 +60,10 @@ public class FileExchangeServer {
                     }
                 }
                 return fileList.toString();
-
+    
             case "/get":
-                 // used to get the specific file that the user wants
-                 if (tokens.length == 2) {
+                // used to get the specific file that the user wants
+                if (tokens.length == 2) {
                     String fileName = tokens[1];
                     File requestedFile = new File("server_directory", fileName);
                     if (requestedFile.exists()) {
@@ -74,29 +74,30 @@ public class FileExchangeServer {
                 } else {
                     return "Error: Invalid parameters for /get command.";
                 }
-
+    
             case "/leave":
                 return "Connection closed. Thank you!"; //if client wants to leave in the server
-
-            case "/register": //command to register handle or alias from the client
+    
+            case "/register":
                 if (tokens.length == 2) {
-                String handle = tokens[1];
+                    String handle = tokens[1];
                     if (!registeredHandles.contains(handle)) {
-                    registeredHandles.add(handle);
-                    return "Welcome " + handle + "!";
-                }   else {
-                    return "Error: Handle or alias already exists.";
+                        registeredHandles.add(handle);
+                        return "Welcome " + handle + "!";
+                    } else {
+                        return "Error: Handle or alias already exists.";
+                    }
+                } else {
+                    return "Error: Invalid parameters for /register command.";
                 }
-            }   else {
-                return "Error: Invalid parameters for /register command.";
-            }
-
-            // Add logic for other commands (/store, etc.) here
-
+    
             default:
                 return "Error: Command not found.";
         }
     }
+    
+    
+
 
     private static void receiveFile(Socket socket, String command) throws IOException { //class from the server to know if file is received
         String[] storeTokens = command.split("\\s+");

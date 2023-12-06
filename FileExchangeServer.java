@@ -20,25 +20,32 @@ public class FileExchangeServer {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-
-                String command;
-                while ((command = reader.readLine()) != null) {
-                    String response = processCommand(command, clientSocket);
-                    writer.println(response);
-                
-                    if (command.equalsIgnoreCase("/leave")) {
-                        System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
-                        break;
-                    }
-                }
-                
-
-                clientSocket.close();
+                new Thread(() -> handleClient(clientSocket)).start();
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void handleClient(Socket clientSocket) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String command;
+            while ((command = reader.readLine()) != null) {
+                String response = processCommand(command, clientSocket);
+                writer.println(response);
+
+                if (command.equalsIgnoreCase("/leave")) {
+                    System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+                    break;
+                }
+            }
+
+            clientSocket.close();
+        } catch (IOException e) {
+            System.err.println("Error handling client: " + e.getMessage());
         }
     }
 
@@ -54,9 +61,9 @@ public class FileExchangeServer {
         switch (action) {
             case "/dir": //comment test
                 // Logic to list files in the server directory
+                StringBuilder fileList = new StringBuilder("Server Directory:\n");
                 File serverDirectory = new File("server_directory");
                 File[] files = serverDirectory.listFiles();
-                StringBuilder fileList = new StringBuilder("Server Directory:\n");
                 if (files != null) {
                     for (File file : files) {
                         fileList.append(file.getName()).append("\n");

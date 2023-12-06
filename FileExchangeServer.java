@@ -52,7 +52,7 @@ public class FileExchangeServer {
         }
 
         switch (action) {
-            case "/dir":
+            case "/dir": //comment test
                 // Logic to list files in the server directory
                 File serverDirectory = new File("server_directory");
                 File[] files = serverDirectory.listFiles();

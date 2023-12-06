@@ -3,11 +3,13 @@ import java.net.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FileExchangeServer {
     private static final int PORT = 12345; // Server port
     private static final int BUFFER_SIZE = 1024;
     private static Set<String> registeredHandles = new HashSet<>();
+    private static Set<Socket> registeredClients = ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) {
         try {
@@ -44,6 +46,11 @@ public class FileExchangeServer {
         String[] tokens = command.split("\\s+");
         String action = tokens[0].toLowerCase();
 
+        // Check if the client is registered
+        if (!isClientRegistered(clientSocket) && !action.equals("/register")) {
+            return "Please register first in order to use other commands. Thank you";
+        }
+
         switch (action) {
             case "/dir":
                 // Logic to list files in the server directory
@@ -79,6 +86,7 @@ public class FileExchangeServer {
                     String handle = tokens[1];
                     if (!registeredHandles.contains(handle)) {
                         registeredHandles.add(handle);
+                        registeredClients.add(clientSocket); // register the client socket
                         return "Welcome " + handle + "!";
                     } else {
                         return "Error: Handle or alias already exists.";
@@ -86,7 +94,7 @@ public class FileExchangeServer {
                 } else {
                     return "Error: Invalid parameters for /register command.";
                 }
-                case "/store":
+            case "/store":
                 if (tokens.length == 2) {
                     String fileName = tokens[1];
                     try {
@@ -111,5 +119,9 @@ public class FileExchangeServer {
             default:
                 return "Error: Command not found";
         }
+        
+    }
+    private static boolean isClientRegistered(Socket clientSocket) {
+        return registeredClients.contains(clientSocket);
     }
 }

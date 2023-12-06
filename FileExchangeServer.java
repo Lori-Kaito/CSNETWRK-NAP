@@ -47,7 +47,7 @@ public class FileExchangeServer {
         String action = tokens[0].toLowerCase();
 
         // Check if the client is registered
-        if (!isClientRegistered(clientSocket) && !action.equals("/register")) {
+        if (!isClientRegistered(clientSocket) && !action.equals("/register") && !action.equals("/leave")) {
             return "Please register first in order to use other commands. Thank you";
         }
 

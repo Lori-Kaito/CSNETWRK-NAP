@@ -35,12 +35,14 @@ public class FileExchangeClient {
             Socket socket = new Socket(serverIP, serverPort);
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
+
 
             connected = true;
             
             while (connected) {
                 System.out.print("Enter command: ");
-                String command = scanner.nextLine();
+                String command = consoleReader.readLine();
                 writer.println(command);
 
                 String response;

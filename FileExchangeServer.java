@@ -3,11 +3,13 @@ import java.net.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FileExchangeServer {
     private static final int PORT = 12345; // Server port
     private static final int BUFFER_SIZE = 1024;
     private static Set<String> registeredHandles = new HashSet<>();
+    private static Set<Socket> registeredClients = ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) {
         try {
@@ -43,6 +45,11 @@ public class FileExchangeServer {
     private static String processCommand(String command, Socket clientSocket) {
         String[] tokens = command.split("\\s+");
         String action = tokens[0].toLowerCase();
+
+        // Check if the client is registered
+        if (!isClientRegistered(clientSocket) && !action.equals("/register")) {
+            return "Please register first in order to use other commands. Thank you";
+        }
 
         switch (action) {
             case "/?":
@@ -81,6 +88,7 @@ public class FileExchangeServer {
                     String handle = tokens[1];
                     if (!registeredHandles.contains(handle)) {
                         registeredHandles.add(handle);
+                        registeredClients.add(clientSocket); // register the client socket
                         return "Welcome " + handle + "!";
                     } else {
                         return "Error: Handle or alias already exists.";
@@ -117,5 +125,9 @@ public class FileExchangeServer {
             default:
                 return "Error: Command not found";
         }
+        
+    }
+    private static boolean isClientRegistered(Socket clientSocket) {
+        return registeredClients.contains(clientSocket);
     }
 }

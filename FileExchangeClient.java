@@ -10,7 +10,7 @@ public class FileExchangeClient {
             Scanner scanner = new Scanner(System.in);
             String serverIP = null;
             int serverPort = 0;
-            
+
             while (true) {
                 System.out.print("Enter server IP address and port (e.g., /join 127.0.0.1 12345): ");
                 String joinCommand = scanner.nextLine();
@@ -40,43 +40,44 @@ public class FileExchangeClient {
                     String command = scanner.nextLine();
                     writer.println(command);
 
-                    String response = reader.readLine();
-                    System.out.println("Server: " + response);
-
                     if (command.equalsIgnoreCase("/leave")) {
                         break;
                     }
-                    else if (command.equalsIgnoreCase("/?")) {
-                        System.out.println("Available Commands:\n/join <server_ip_add> <port>\n/leave\n/register <handle>\n/store <filename>\n/dir\n/get <filename>\n/?");
-                        continue;
-                    }
-                    else if (command.equalsIgnoreCase("/store")) {
-                        System.out.print("Enter the file path to upload: ");
-                        String filePath = scanner.nextLine();
-                
-                        File file = new File(filePath);
-                        if (file.exists()) {
-                            // Send /store command to the server
-                            writer.println(command);
-                
-                            // Send the file content to the server
-                            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                    String[] tokens = command.split("\\s+");
+                    if (tokens.length == 2 && tokens[0].equalsIgnoreCase("/store")) {
+                        String fileName = tokens[1];
+                        File fileToSend = new File(fileName);
+
+                        if (fileToSend.exists()) {
+                            try (FileInputStream fileInputStream = new FileInputStream(fileToSend);
+                                OutputStream outputStream = socket.getOutputStream()) {
+
                                 byte[] buffer = new byte[BUFFER_SIZE];
                                 int bytesRead;
-                
+
+                                // Send command to server
+                                writer.println(command);
+
+                                // Send file content to the server
                                 while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                                    socket.getOutputStream().write(buffer, 0, bytesRead);
+                                    outputStream.write(buffer, 0, bytesRead);
                                 }
+                                outputStream.flush(); // Ensure all data is sent
+                                System.out.println("File '" + fileName + "' sent to the server.");
                             } catch (IOException e) {
-                                System.err.println("Error reading or sending the file: " + e.getMessage());
+                                System.err.println("Error sending file: " + e.getMessage());
                             }
-                        } else {
-                            System.out.println("File not found!");
+                    } else {
+                        // Reading and printing server's response for other commands
+                        String response;
+                        while ((response = reader.readLine()) != null && !response.isEmpty()) {
+                            System.out.println("Server: " + response);
                         }
                     }
                 }
 
                 socket.close();
+            }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
         }

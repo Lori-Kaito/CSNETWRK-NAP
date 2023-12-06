@@ -47,13 +47,11 @@ public class FileExchangeServer {
         String action = tokens[0].toLowerCase();
 
         // Check if the client is registered
-        if (!isClientRegistered(clientSocket) && !action.equals("/register")) {
+        if (!isClientRegistered(clientSocket) && !action.equals("/register") && !action.equals("/leave")) {
             return "Please register first in order to use other commands. Thank you";
         }
 
         switch (action) {
-            case "/?":
-                return "Available Commands:\n/join <server_ip_add> <port>\n/leave\n/register <handle>\n/store <filename>\n/dir\n/get <filename>\n/?";
             case "/dir":
                 // Logic to list files in the server directory
                 File serverDirectory = new File("server_directory");
@@ -99,26 +97,22 @@ public class FileExchangeServer {
             case "/store":
                 if (tokens.length == 2) {
                     String fileName = tokens[1];
-                    File fileToSend = new File("client_directory", fileName);
-
-                    if (fileToSend.exists()) {
-                        try {
-                            InputStream input = clientSocket.getInputStream();
-                            FileOutputStream fileOutputStream = new FileOutputStream("server_directory/" + fileName);
-
-                            byte[] buffer = new byte[BUFFER_SIZE];
-                            int bytesRead;
-
-                            // Read bytes from the input stream and write to the file
-                            while ((bytesRead = input.read(buffer)) != -1) {
-                                fileOutputStream.write(buffer, 0, bytesRead);
-                            }
-
-                            fileOutputStream.close();
-                            return "File '" + fileName + "' successfully stored on the server.";
-                        } catch (IOException e) {
-                            return "Error: " + e.getMessage();
+                    try {
+                        FileOutputStream fileOutputStream = new FileOutputStream("server_directory/" + fileName);
+            
+                        byte[] buffer = new byte[BUFFER_SIZE];
+                        int bytesRead;
+            
+                        InputStream input = clientSocket.getInputStream();
+                        while ((bytesRead = input.read(buffer)) != -1) {
+                            fileOutputStream.write(buffer, 0, bytesRead);
                         }
+            
+                        fileOutputStream.close();
+                        return "File '" + fileName + "' successfully stored on the server.";
+                    } catch (IOException e) {
+                        return "Error: " + e.getMessage();
+                    }
                 } else {
                     return "Error: Invalid parameters for /store command.";
                 }
@@ -130,5 +124,4 @@ public class FileExchangeServer {
     private static boolean isClientRegistered(Socket clientSocket) {
         return registeredClients.contains(clientSocket);
     }
-}
 }
